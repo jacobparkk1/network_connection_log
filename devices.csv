@@ -1,0 +1,18 @@
+IP_Address,Location,Device_Name
+192.168.1.1,Main Network Closet,Core Router
+192.168.1.2,Main Network Closet,Core Switch
+192.168.1.10,Front Desk,Front Desk AP
+192.168.1.11,Lobby,Lobby Switch
+192.168.1.20,Pool Area,Pool Bar AP
+192.168.1.21,Pool Area,Pool Restroom AP
+192.168.1.30,Restaurant,Dining Room AP
+192.168.1.31,Restaurant,POS Terminal Switch
+192.10.10.10,Spa & Wellness,Spa AP
+192.168.1.50,Conference Center,Ballroom AP
+192.168.1.51,Conference Center,AV Control Switch
+192.168.1.60,Guest Rooms Floor 1,Floor-1 AP
+192.168.1.61,Guest Rooms Floor 2,Floor-2 AP
+192.168.1.62,Guest Rooms Floor 3,Floor-3 AP
+192.168.1.70,Back Office,Security NVR
+192.168.1.71,Back Office,Manager Workstation
+8.8.8.8,External,Google DNS (WAN Check)
