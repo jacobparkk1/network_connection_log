@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
 """
-==============================================================
   Resort Network Connectivity Logger
-  Author : IT Operations
+  Author : Jacob Park
   Purpose: Ping critical devices, log outages, repeat every 60s
-==============================================================
 """
 
-import csv
-import subprocess
-import datetime
-import time
-import platform
-import os
-import sys
+import csv, subprocess, datetime, time, platform, os, sys, socket
 
-# ── File paths ──────────────────────────────────────────────
+# File paths
 DEVICES_FILE  = "devices.csv"
 OUTAGE_LOG    = "network_outages.log"
 
-# ── ANSI colour codes (work on macOS, Linux, Windows 10+) ───
+# ANSI colour codes 
 RESET   = "\033[0m"
 BOLD    = "\033[1m"
 GREEN   = "\033[92m"
@@ -29,11 +21,11 @@ CYAN    = "\033[96m"
 WHITE   = "\033[97m"
 DIM     = "\033[2m"
 
-# ── Ping interval (seconds) ──────────────────────────────────
+# Ping interval (seconds)
 CHECK_INTERVAL = 60
 
 
-# ────────────────────────────────────────────────────────────
+
 def enable_windows_ansi():
     """Enable ANSI escape codes on Windows 10+."""
     if platform.system() == "Windows":
@@ -46,14 +38,29 @@ def ping(ip: str) -> bool:
     Returns True if the host responds, False otherwise.
     Uses the correct flag for the OS (-n on Windows, -c on Unix).
     """
-    flag = "-n" if platform.system() == "Windows" else "-c"
 
-    result = subprocess.run(
-        ["ping", flag, "1", ip],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-    return result.returncode == 0
+    # Try ICMP ping first
+    try:
+        flag = "-n" if platform.system() == "Windows" else "-c"
+        result = subprocess.run(
+            ["ping", flag, "1", ip],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        if result.returncode == 0:
+            return True
+    except FileNotFoundError:
+        pass  # ping not available, fall through to socket
+
+    # Fall back to TCP socket on port 80
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex((ip, 80))
+        sock.close()
+        return result == 0
+    except OSError:
+        return False
 
 
 def log_outage(ip: str, device_name: str, location: str) -> None:
@@ -128,12 +135,12 @@ def print_summary(total: int, up: int, down: int) -> None:
           f"{RED}{down} DOWN{RESET}  |  "
           f"{WHITE}{total} Total{RESET}")
     if down > 0:
-        print(f"  {YELLOW}⚠  Outages logged → {OUTAGE_LOG}{RESET}")
+        print(f"  {YELLOW}!!  Outages logged → {OUTAGE_LOG}{RESET}")
     print(f"{CYAN}{'═' * width}{RESET}")
     print(f"  {DIM}Next scan in {CHECK_INTERVAL}s … (Ctrl+C to stop){RESET}")
 
 
-# ────────────────────────────────────────────────────────────
+
 def run_scan(devices: list[dict], cycle: int) -> None:
     """Ping every device in the list and log any failures."""
     up_count   = 0
@@ -159,7 +166,7 @@ def run_scan(devices: list[dict], cycle: int) -> None:
     print_summary(len(devices), up_count, down_count)
 
 
-# ────────────────────────────────────────────────────────────
+
 def main() -> None:
     enable_windows_ansi()
 
@@ -182,6 +189,7 @@ def main() -> None:
     except KeyboardInterrupt:
         print(f"\n\n  {YELLOW}Monitor stopped by user. Goodbye!{RESET}\n")
         sys.exit(0)
+
 
 
 if __name__ == "__main__":
