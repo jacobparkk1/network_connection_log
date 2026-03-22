@@ -1,4 +1,4 @@
-## network_connection_log
+## Network Connectivity Logger
 Monitors critical network devices, displays live UP/DOWN
 status in the terminal, and logs all outages with timestamps.
 
